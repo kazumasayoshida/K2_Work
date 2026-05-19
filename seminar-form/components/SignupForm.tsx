@@ -160,7 +160,18 @@ export default function SignupForm() {
       return;
     }
     setSubmitting(true);
-    await new Promise((r) => setTimeout(r, 1500));
+    try {
+      const res = await fetch("/api/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      if (!res.ok) throw new Error("送信に失敗しました");
+    } catch (e) {
+      alert("送信中にエラーが発生しました。時間をおいて再度お試しください。");
+      setSubmitting(false);
+      return;
+    }
     setSubmitting(false);
     setSubmitted(true);
     window.scrollTo({ top: 0, behavior: "smooth" });

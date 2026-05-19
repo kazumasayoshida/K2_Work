@@ -1,39 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { google } from "googleapis";
 
 export const runtime = "nodejs";
 
-async function appendToSheet(entry: Record<string, string>) {
-  const spreadsheetId = process.env.GOOGLE_SHEET_ID;
-  const credentialsJson = process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
-  if (!spreadsheetId || !credentialsJson) return;
+async function appendToSheet(entry: Record<string, string | null>) {
+  const scriptUrl = process.env.GOOGLE_SCRIPT_URL;
+  if (!scriptUrl) return;
 
-  const credentials = JSON.parse(credentialsJson);
-  const auth = new google.auth.GoogleAuth({
-    credentials,
-    scopes: ["https://www.googleapis.com/auth/spreadsheets"],
-  });
-
-  const sheets = google.sheets({ version: "v4", auth });
-
-  const row = [
-    new Date().toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" }),
-    entry.last_name + " " + entry.first_name,
-    entry.last_name_kana + " " + entry.first_name_kana,
-    entry.phone,
-    entry.email,
-    entry.child_age,
-    entry.preferred_date,
-    entry.heard_from,
-    entry.motivation ?? "",
-  ];
-
-  await sheets.spreadsheets.values.append({
-    spreadsheetId,
-    range: "申込一覧!A:I",
-    valueInputOption: "USER_ENTERED",
-    requestBody: { values: [row] },
+  await fetch(scriptUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(entry),
   });
 }
 
